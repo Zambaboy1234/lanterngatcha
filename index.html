@@ -14,18 +14,16 @@ body {
 }
 
 button {
-    font-size: 20px;
-    padding: 10px 20px;
-    margin: 10px;
+    font-size: 18px;
+    padding: 8px 18px;
+    margin: 8px;
 }
 
 .infra { color: red; }
 .ultra { color: violet; }
 .lumen { color: silver; }
 
-.pickupMark {
-    font-weight: bold;
-}
+.pickupMark { font-weight: bold; }
 
 .subtitle {
     font-size: 14px;
@@ -37,6 +35,30 @@ button {
 .bannerTitle {
     font-size: 16px;
     color: silver;
+}
+
+.stats {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #ccc;
+}
+
+.collection {
+    margin-top: 10px;
+    font-size: 13px;
+    color: #bbb;
+}
+
+.newMark {
+    color: gold;
+    font-weight: bold;
+}
+
+.resetBtn {
+    margin-top: 15px;
+    background: #333;
+    color: #fff;
+    border: 1px solid #555;
 }
 </style>
 </head>
@@ -54,6 +76,17 @@ button {
 <button onclick="pull(10)">10회</button>
 
 <div id="result"></div>
+
+<div class="stats">
+총 뽑기 횟수: <span id="totalCount">0</span>
+</div>
+
+<div class="collection">
+획득한 캐릭터:<br>
+<span id="collectionList">없음</span>
+</div>
+
+<button class="resetBtn" onclick="resetData()">리셋</button>
 
 <script>
 
@@ -83,12 +116,17 @@ let DB = [
     {name:"베르너", rarity:1, weight:1}
 ];
 
-// ======================
-// 현재 픽업 설정
-// ======================
-
 let PICKUP_3 = "발렌티나";
 let PICKUP_2 = "올가";
+
+// ======================
+// 저장 데이터 로드
+// ======================
+
+let totalCount = parseInt(localStorage.getItem("totalCount")) || 0;
+let collection = JSON.parse(localStorage.getItem("collection")) || [];
+
+updateStats();
 
 // ======================
 // 픽업 가중치 적용
@@ -97,20 +135,14 @@ let PICKUP_2 = "올가";
 function applyPickupWeights(){
     DB.forEach(c => {
         c.weight = 1;
-
-        if(PICKUP_3 && c.name === PICKUP_3){
-            c.weight = 5;
-        }
-        if(PICKUP_2 && c.name === PICKUP_2){
-            c.weight = 4;
-        }
+        if(PICKUP_3 && c.name === PICKUP_3) c.weight = 5;
+        if(PICKUP_2 && c.name === PICKUP_2) c.weight = 4;
     });
 }
-
 applyPickupWeights();
 
 // ======================
-// 희귀도 확률
+// 기본 확률
 // ======================
 
 function rollRarity(){
@@ -120,33 +152,20 @@ function rollRarity(){
     return 1;
 }
 
-// ======================
-// 가중치 랜덤 선택
-// ======================
-
 function weightedRandom(pool){
     let totalWeight = pool.reduce((sum,c)=>sum+c.weight,0);
     let r = Math.random() * totalWeight;
-
     for(let c of pool){
         if(r < c.weight) return c;
         r -= c.weight;
     }
 }
 
-// ======================
-// 색상 클래스
-// ======================
-
 function getClass(rarity){
     if(rarity === 3) return "lumen";
     if(rarity === 2) return "ultra";
     return "infra";
 }
-
-// ======================
-// 등급 텍스트
-// ======================
 
 function getGradeText(rarity){
     if(rarity === 3) return "[LUMEN(★★★)]";
@@ -155,7 +174,7 @@ function getGradeText(rarity){
 }
 
 // ======================
-// 뽑기 실행 (10연 보장 포함)
+// 뽑기
 // ======================
 
 function pull(times){
@@ -169,33 +188,70 @@ function pull(times){
         results.push(char);
     }
 
-    // 10연 보장 로직
+    // 10연 보장
     if(times === 10){
         let hasUltraOrHigher = results.some(c => c.rarity >= 2);
-
         if(!hasUltraOrHigher){
             let ultraPool = DB.filter(c => c.rarity === 2);
-            let guaranteed = weightedRandom(ultraPool);
-            results[9] = guaranteed; // 마지막 결과 교체
+            results[9] = weightedRandom(ultraPool);
         }
     }
 
-    // 출력
     let output = "";
 
     for(let char of results){
+
+        totalCount++;
 
         let isPickup = (
             (PICKUP_3 && char.name === PICKUP_3) ||
             (PICKUP_2 && char.name === PICKUP_2)
         );
 
+        let isNew = !collection.includes(char.name);
+        if(isNew){
+            collection.push(char.name);
+        }
+
         output += `<div class="${getClass(char.rarity)} ${isPickup ? 'pickupMark':''}">
-        ${getGradeText(char.rarity)} ${char.name} ${isPickup ? '[PICK UP]' : ''}
+        ${getGradeText(char.rarity)} ${char.name}
+        ${isPickup ? '[PICK UP]' : ''}
+        ${isNew ? '<span class="newMark"> New!</span>' : ''}
         </div>`;
     }
 
     document.getElementById("result").innerHTML = output;
+
+    localStorage.setItem("totalCount", totalCount);
+    localStorage.setItem("collection", JSON.stringify(collection));
+
+    updateStats();
+}
+
+// ======================
+// 통계 업데이트
+// ======================
+
+function updateStats(){
+    document.getElementById("totalCount").textContent = totalCount;
+    document.getElementById("collectionList").textContent =
+        collection.length > 0 ? collection.join(", ") : "없음";
+}
+
+// ======================
+// 리셋 기능
+// ======================
+
+function resetData(){
+    let confirmReset = confirm("정말로 모든 기록을 초기화하시겠습니까?");
+    if(confirmReset){
+        totalCount = 0;
+        collection = [];
+        localStorage.removeItem("totalCount");
+        localStorage.removeItem("collection");
+        document.getElementById("result").innerHTML = "";
+        updateStats();
+    }
 }
 
 </script>
