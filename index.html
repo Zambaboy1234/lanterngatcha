@@ -75,6 +75,25 @@ cursor:pointer;
 color:#aaa;
 }
 .closeBtn:hover{color:white;}
+
+.logNote{
+font-size:11px;
+color:#777;
+margin-bottom:10px;
+}
+
+.logCard{
+background:#1c1c1c;
+border-radius:6px;
+padding:8px;
+margin-bottom:14px;
+}
+
+.logMeta{
+font-size:11px;
+color:#aaa;
+margin-bottom:6px;
+}
 </style>
 </head>
 
@@ -136,6 +155,7 @@ color:#aaa;
 가챠 기록
 <span class="closeBtn" onclick="closeLog()">✕</span>
 </div>
+<div class="logNote">최근 200회까지만 표시됩니다.</div>
 <div id="logList"></div>
 </div>
 </div>
@@ -143,9 +163,7 @@ color:#aaa;
 <script>
 
 // ===== DB =====
-
 let DB = [
-
 {name:"발렌티나",rarity:3,group:"등불사무소"},
 {name:"도로시",rarity:3,group:"등불사무소"},
 {name:"백연",rarity:3,group:"등불사무소"},
@@ -217,9 +235,7 @@ let DB = [
 
 {name:"스테파네트",rarity:3,group:"솔레어"},
 {name:"뮌하우젠",rarity:2,group:"솔레어"}
-
 ];
-
 
 // ===== 상태 =====
 let totalCount=parseInt(localStorage.getItem("totalCount"))||0;
@@ -230,64 +246,78 @@ let sortMode="grade";
 
 updateUI();
 
-// ===== 유틸 =====
 function rollRarity(){let r=Math.random();if(r<0.03)return 3;if(r<0.23)return 2;return 1;}
 function getGradeText(r){if(r===3)return "[LUMEN(★★★)]";if(r===2)return "[ULTRA(★★)]";return "[INFRA(★)]";}
 function getClass(r){if(r===3)return "lumen";if(r===2)return "ultra";return "infra";}
 
-// ===== 가챠 =====
 function pull(times){
 let results=[];
 for(let i=0;i<times;i++){
 let rarity=rollRarity();
 let pool=DB.filter(c=>c.rarity===rarity);
-let char=pool[Math.floor(Math.random()*pool.length)];
-results.push(char);
+results.push(pool[Math.floor(Math.random()*pool.length)]);
 }
 if(times===10&&!results.some(c=>c.rarity>=2)){
 let ultraPool=DB.filter(c=>c.rarity===2);
 results[9]=ultraPool[Math.floor(Math.random()*ultraPool.length)];
 }
+
 let html="";
 for(let char of results){
 totalCount++;glow++;
-history.push(`${getGradeText(char.rarity)} ${char.name}`);
 let isNew=!collection.includes(char.name);
 if(isNew)collection.push(char.name);
+
 html+=`<div class="resultCard ${getClass(char.rarity)}">
 ${getGradeText(char.rarity)} ${char.name}
 <span class="groupText">(${char.group})</span>
 ${isNew?'<span class="newMark"> New!</span>':''}
 </div>`;
 }
+
 document.getElementById("result").innerHTML=html;
+saveHistory(times,results);
 localStorage.setItem("totalCount",totalCount);
 localStorage.setItem("collection",JSON.stringify(collection));
 localStorage.setItem("glow",glow);
-localStorage.setItem("history",JSON.stringify(history));
 updateUI();
 }
 
-// ===== 잔광 =====
+function saveHistory(times,results){
+let now=new Date();
+let dateStr=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,'0')+"-"+String(now.getDate()).padStart(2,'0')+" "+String(now.getHours()).padStart(2,'0')+":"+String(now.getMinutes()).padStart(2,'0');
+let record={date:dateStr,count:times,results:results};
+history.unshift(record);
+if(history.length>200)history=history.slice(0,200);
+localStorage.setItem("history",JSON.stringify(history));
+}
+
+function openLog(){document.getElementById("logModal").style.display="flex";renderLog();}
+function closeLog(){document.getElementById("logModal").style.display="none";}
+
+function renderLog(){
+if(history.length===0){document.getElementById("logList").innerHTML="기록 없음";return;}
+let html="";
+for(let record of history){
+html+=`<div class="logCard"><div class="logMeta">${record.date} | ${record.count}회</div>`;
+for(let r of record.results){
+html+=`<div class="${getClass(r.rarity)}">${getGradeText(r.rarity)} ${r.name} <span class="groupText">(${r.group})</span></div>`;
+}
+html+="</div>";
+}
+document.getElementById("logList").innerHTML=html;
+}
+
 function openGlow(){document.getElementById("glowModal").style.display="flex";renderExchange();}
 function closeGlow(){document.getElementById("glowModal").style.display="none";}
 
 function renderExchange(){
+let available=DB.filter(c=>!collection.includes(c.name)&&(c.rarity===2||c.rarity===3));
 let html="";
-let available=DB.filter(c=>!collection.includes(c.name) && (c.rarity===2||c.rarity===3));
 for(let c of available){
 let cost=c.rarity===3?200:50;
 let disabled=glow<cost;
-html+=`
-<div class="exchangeRow ${getClass(c.rarity)}">
-<div>
-${getGradeText(c.rarity)} ${c.name}
-<span class="groupText">(${c.group})</span>
-</div>
-<button class="exchangeBtn" onclick="exchange('${c.name}',${cost})" ${disabled?'disabled':''}>
-교환 (${cost})
-</button>
-</div>`;
+html+=`<div class="exchangeRow ${getClass(c.rarity)}"><div>${getGradeText(c.rarity)} ${c.name} <span class="groupText">(${c.group})</span></div><button class="exchangeBtn" onclick="exchange('${c.name}',${cost})" ${disabled?'disabled':''}>교환 (${cost})</button></div>`;
 }
 document.getElementById("exchangeList").innerHTML=html||"교환 가능한 캐릭터 없음";
 }
@@ -304,15 +334,6 @@ renderExchange();
 }
 }
 
-// ===== 기록 =====
-function openLog(){
-document.getElementById("logModal").style.display="flex";
-document.getElementById("logList").innerHTML=
-history.length?history.map(x=>"<div>"+x+"</div>").join(""):"기록 없음";
-}
-function closeLog(){document.getElementById("logModal").style.display="none";}
-
-// ===== 정렬 =====
 function setSort(mode){sortMode=mode;updateUI();}
 function updateUI(){
 document.getElementById("totalCount").textContent=totalCount;
@@ -320,36 +341,23 @@ document.getElementById("glowCount").textContent=glow;
 
 let owned=DB.filter(c=>collection.includes(c.name));
 let html="";
-
 if(sortMode==="all"){
 let sorted=[...DB].sort((a,b)=>b.rarity-a.rarity);
 for(let c of sorted){
 let ownedFlag=collection.includes(c.name);
-html+=`<div class="${getClass(c.rarity)} ${ownedFlag?'':'dimmed'}">
-${getGradeText(c.rarity)} ${c.name}
-<span class="groupText">(${c.group})</span></div>`;
+html+=`<div class="${getClass(c.rarity)} ${ownedFlag?'':'dimmed'}">${getGradeText(c.rarity)} ${c.name} <span class="groupText">(${c.group})</span></div>`;
 }
 }else{
-owned.sort((a,b)=>{
-if(sortMode==="name")return a.name.localeCompare(b.name,"ko");
-if(sortMode==="group")return a.group.localeCompare(b.group,"ko");
-return b.rarity-a.rarity;
-});
+owned.sort((a,b)=>{if(sortMode==="name")return a.name.localeCompare(b.name,"ko");if(sortMode==="group")return a.group.localeCompare(b.group,"ko");return b.rarity-a.rarity;});
 let currentGroup="";
 for(let c of owned){
-if(sortMode==="group"&&c.group!==currentGroup){
-currentGroup=c.group;
-html+=`<hr><strong>${currentGroup}</strong><br>`;
-}
-html+=`<div class="${getClass(c.rarity)}">
-${getGradeText(c.rarity)} ${c.name}
-<span class="groupText">(${c.group})</span></div>`;
+if(sortMode==="group"&&c.group!==currentGroup){currentGroup=c.group;html+=`<hr><strong>${currentGroup}</strong><br>`;}
+html+=`<div class="${getClass(c.rarity)}">${getGradeText(c.rarity)} ${c.name} <span class="groupText">(${c.group})</span></div>`;
 }
 }
 document.getElementById("collectionArea").innerHTML=html||"없음";
 }
 
-// ===== 리셋 =====
 function resetData(){
 if(confirm("정말로 모든 기록을 초기화하시겠습니까?")){
 totalCount=0;collection=[];glow=0;history=[];
