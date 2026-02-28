@@ -3,20 +3,52 @@
 <head>
 <meta charset="UTF-8">
 <title>집중 헤드헌팅</title>
+
 <style>
-body { font-family:sans-serif; text-align:center; padding:20px; background:#111; color:white; }
-button { font-size:20px; padding:10px 20px; margin:10px; }
+body {
+    font-family: sans-serif;
+    text-align: center;
+    padding: 20px;
+    background: #111;
+    color: white;
+}
 
-.infra { color:red; }
-.ultra { color:violet; }
-.lumen { color:silver; }
+button {
+    font-size: 20px;
+    padding: 10px 20px;
+    margin: 10px;
+}
 
-.pickupMark { font-weight:bold; }
+.infra { color: red; }
+.ultra { color: violet; }
+.lumen { color: silver; }
+
+.pickupMark {
+    font-weight: bold;
+}
+
+.subtitle {
+    font-size: 14px;
+    color: #aaa;
+    margin-top: -10px;
+    margin-bottom: 20px;
+}
+
+.bannerTitle {
+    font-size: 16px;
+    color: silver;
+}
 </style>
 </head>
+
 <body>
 
 <h2>[집중 헤드헌팅]</h2>
+
+<div class="subtitle">
+<span class="bannerTitle">쌓아올리는 등불의 벨 에포크</span><br>
+픽업 대상: 발렌티나 / 올가
+</div>
 
 <button onclick="pull(1)">1회</button>
 <button onclick="pull(10)">10회</button>
@@ -27,7 +59,6 @@ button { font-size:20px; padding:10px 20px; margin:10px; }
 
 // ======================
 // 캐릭터 DB
-// weight 기본값은 1
 // ======================
 
 let DB = [
@@ -53,22 +84,25 @@ let DB = [
 ];
 
 // ======================
-// 현재 픽업 지정
+// 현재 픽업 설정
 // ======================
 
 let PICKUP_3 = "발렌티나";
-let PICKUP_2 = "none";
+let PICKUP_2 = "올가";
 
-// 픽업 가중치 설정
+// ======================
+// 픽업 가중치 적용
+// ======================
+
 function applyPickupWeights(){
     DB.forEach(c => {
-        c.weight = 1; // 초기화
+        c.weight = 1;
 
-        if(c.name === PICKUP_3){
-            c.weight = 5; // 3성 픽업 가중치 증가
+        if(PICKUP_3 && c.name === PICKUP_3){
+            c.weight = 5;
         }
-        if(c.name === PICKUP_2){
-            c.weight = 4; // 2성 픽업 가중치 증가
+        if(PICKUP_2 && c.name === PICKUP_2){
+            c.weight = 4;
         }
     });
 }
@@ -91,7 +125,6 @@ function rollRarity(){
 // ======================
 
 function weightedRandom(pool){
-
     let totalWeight = pool.reduce((sum,c)=>sum+c.weight,0);
     let r = Math.random() * totalWeight;
 
@@ -112,7 +145,17 @@ function getClass(rarity){
 }
 
 // ======================
-// 뽑기
+// 등급 텍스트 (★ 표시)
+// ======================
+
+function getGradeText(rarity){
+    if(rarity === 3) return "[LUMEN(★★★)]";
+    if(rarity === 2) return "[ULTRA(★★)]";
+    return "[INFRA(★)]";
+}
+
+// ======================
+// 뽑기 실행
 // ======================
 
 function pull(times){
@@ -125,10 +168,13 @@ function pull(times){
         let pool = DB.filter(c => c.rarity === rarity);
         let char = weightedRandom(pool);
 
-        let isPickup = (char.name === PICKUP_3 || char.name === PICKUP_2);
+        let isPickup = (
+            (PICKUP_3 && char.name === PICKUP_3) ||
+            (PICKUP_2 && char.name === PICKUP_2)
+        );
 
         output += `<div class="${getClass(char.rarity)} ${isPickup ? 'pickupMark':''}">
-        ★${char.rarity} ${char.name} ${isPickup ? '[PICK UP]' : ''}
+        ${getGradeText(char.rarity)} ${char.name} ${isPickup ? '[PICK UP]' : ''}
         </div>`;
     }
 
