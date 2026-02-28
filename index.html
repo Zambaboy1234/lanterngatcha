@@ -5,55 +5,67 @@
 <title>집중 헤드헌팅</title>
 
 <style>
-body {
-    font-family: sans-serif;
-    background: #111;
-    color: white;
-    text-align: center;
-    padding: 20px;
+body{
+    font-family:sans-serif;
+    background:#111;
+    color:white;
+    padding:20px;
 }
 
-h2 { margin-bottom: 5px; }
+h2{margin-bottom:5px;text-align:center;}
 
-.sectionBox {
-    border: 1px solid #333;
-    padding: 15px;
-    margin-top: 15px;
-    border-radius: 8px;
-    background: #1a1a1a;
+.subtitle{
+    text-align:center;
+    font-size:14px;
+    color:#aaa;
+    margin-bottom:20px;
 }
 
-button {
-    width: 120px;
-    height: 40px;
-    margin: 6px;
-    border-radius: 6px;
-    border: none;
-    background: #222;
-    color: white;
-    cursor: pointer;
+.section{
+    border:1px solid #333;
+    border-radius:8px;
+    padding:15px;
+    margin-bottom:20px;
+    background:#151515;
 }
 
-button:hover { background: #333; }
-
-.infra { color: red; }
-.ultra { color: violet; }
-.lumen { color: silver; }
-
-.newMark { color: gold; font-weight: bold; }
-
-.subtitle {
-    font-size: 14px;
-    color: #aaa;
-    margin-bottom: 10px;
+.resultCard{
+    background:#1c1c1c;
+    padding:10px;
+    border-radius:6px;
+    margin-bottom:8px;
 }
 
-.smallText { font-size: 12px; color: #888; }
+button{
+    width:120px;
+    height:38px;
+    margin:6px;
+    border:none;
+    border-radius:6px;
+    background:#222;
+    color:white;
+    cursor:pointer;
+}
+button:hover{background:#333;}
 
-hr {
-    border: none;
-    border-top: 1px solid #333;
-    margin: 15px 0;
+.infra{color:red;}
+.ultra{color:violet;}
+.lumen{color:silver;}
+
+.newMark{color:gold;font-weight:bold;}
+.groupText{font-size:12px;color:#888;}
+
+.dimmed{
+    color:#666 !important;
+    opacity:0.45;
+}
+
+.sortBtns{text-align:center;margin-bottom:10px;}
+
+hr{
+    border:none;
+    border-top:1px solid #333;
+    margin:10px 0;
 }
 </style>
 </head>
@@ -66,125 +78,128 @@ hr {
 픽업 대상: [LUMEN(★★★)]발렌티나 / [ULTRA(★★)]올가
 </div>
 
-<div class="sectionBox">
+<!-- 가챠 결과 영역 -->
+<div class="section">
+<div style="text-align:center;">
 <button onclick="pull(1)">1회</button>
 <button onclick="pull(10)">10회</button>
+</div>
 <div id="result"></div>
 </div>
 
-<div class="sectionBox">
+<!-- 도감 영역 -->
+<div class="section">
 총 뽑기 횟수: <span id="totalCount">0</span>
 <hr>
-정렬 방식:
+
+<div class="sortBtns">
 <button onclick="setSort('grade')">등급별</button>
 <button onclick="setSort('name')">가나다순</button>
 <button onclick="setSort('group')">소속별</button>
-
-<div id="collectionList"></div>
+<button onclick="setSort('all')">전체보기</button>
 </div>
 
-<div class="sectionBox">
+<div id="collectionArea"></div>
+</div>
+
+<div class="section" style="text-align:center;">
 <button onclick="resetData()">리셋</button>
 </div>
 
 <script>
 
-// ======================
-// DB (소속 포함)
-// ======================
+// ================= DB =================
 
 let DB = [
-{name:"발렌티나", rarity:3, group:"등불사무소"},
-{name:"도로시", rarity:3, group:"등불사무소"},
-{name:"백연", rarity:3, group:"등불사무소"},
-{name:"쿠로세", rarity:3, group:"등불사무소"},
-{name:"올가", rarity:3, group:"등불사무소"},
-{name:"비아트리스", rarity:3, group:"등불사무소"},
-{name:"유나", rarity:2, group:"등불사무소"},
-{name:"오웬", rarity:2, group:"등불사무소"},
-{name:"할", rarity:1, group:"등불사무소"},
-{name:"재클린", rarity:1, group:"등불사무소"},
 
-{name:"마리", rarity:3, group:"아스트론 학파 연구지구"},
-{name:"가온", rarity:3, group:"아스트론 학파 연구지구"},
-{name:"아이린", rarity:3, group:"아스트론 학파 연구지구"},
-{name:"노딘", rarity:3, group:"아스트론 학파 연구지구"},
-{name:"니콜라", rarity:2, group:"아스트론 학파 연구지구"},
-{name:"로렌츠", rarity:2, group:"아스트론 학파 연구지구"},
-{name:"프리츠", rarity:1, group:"아스트론 학파 연구지구"},
-{name:"베르너", rarity:1, group:"아스트론 학파 연구지구"},
+{name:"발렌티나",rarity:3,group:"등불사무소"},
+{name:"도로시",rarity:3,group:"등불사무소"},
+{name:"백연",rarity:3,group:"등불사무소"},
+{name:"쿠로세",rarity:3,group:"등불사무소"},
+{name:"올가",rarity:3,group:"등불사무소"},
+{name:"비아트리스",rarity:3,group:"등불사무소"},
+{name:"유나",rarity:2,group:"등불사무소"},
+{name:"오웬",rarity:2,group:"등불사무소"},
+{name:"할",rarity:1,group:"등불사무소"},
+{name:"재클린",rarity:1,group:"등불사무소"},
 
-{name:"셀렌느", rarity:3, group:"하르덴브라흐"},
-{name:"마커스", rarity:3, group:"하르덴브라흐"},
-{name:"암젤", rarity:2, group:"하르덴브라흐"},
-{name:"에밀리", rarity:1, group:"하르덴브라흐"},
+{name:"마리",rarity:3,group:"아스트론 학파 연구지구"},
+{name:"가온",rarity:3,group:"아스트론 학파 연구지구"},
+{name:"아이린",rarity:3,group:"아스트론 학파 연구지구"},
+{name:"노딘",rarity:3,group:"아스트론 학파 연구지구"},
+{name:"니콜라",rarity:2,group:"아스트론 학파 연구지구"},
+{name:"로렌츠",rarity:2,group:"아스트론 학파 연구지구"},
+{name:"프리츠",rarity:1,group:"아스트론 학파 연구지구"},
+{name:"베르너",rarity:1,group:"아스트론 학파 연구지구"},
 
-{name:"안드레이", rarity:3, group:"66구역"},
-{name:"드미트리", rarity:3, group:"66구역"},
-{name:"공주", rarity:3, group:"66구역"},
-{name:"안나", rarity:2, group:"66구역"},
+{name:"셀렌느",rarity:3,group:"하르덴브라흐"},
+{name:"마커스",rarity:3,group:"하르덴브라흐"},
+{name:"암젤",rarity:2,group:"하르덴브라흐"},
+{name:"에밀리",rarity:1,group:"하르덴브라흐"},
 
-{name:"모리어티", rarity:3, group:"터미널15"},
-{name:"미셸", rarity:3, group:"터미널15"},
-{name:"카산드라", rarity:3, group:"터미널15"},
-{name:"제럴드", rarity:1, group:"터미널15"},
+{name:"안드레이",rarity:3,group:"66구역"},
+{name:"드미트리",rarity:3,group:"66구역"},
+{name:"공주",rarity:3,group:"66구역"},
+{name:"안나",rarity:2,group:"66구역"},
 
-{name:"루핀", rarity:3, group:"볼칸 중공업"},
-{name:"요루", rarity:3, group:"볼칸 중공업"},
-{name:"헤더스", rarity:1, group:"볼칸 중공업"},
+{name:"모리어티",rarity:3,group:"터미널15"},
+{name:"미셸",rarity:3,group:"터미널15"},
+{name:"카산드라",rarity:3,group:"터미널15"},
+{name:"제럴드",rarity:1,group:"터미널15"},
 
-{name:"올리버", rarity:3, group:"찰스 브리게이드"},
-{name:"오지에", rarity:3, group:"찰스 브리게이드"},
-{name:"람다", rarity:3, group:"찰스 브리게이드"},
-{name:"카롤", rarity:3, group:"찰스 브리게이드"},
-{name:"모지", rarity:3, group:"찰스 브리게이드"},
-{name:"란", rarity:3, group:"찰스 브리게이드"},
-{name:"나모", rarity:2, group:"찰스 브리게이드"},
+{name:"루핀",rarity:3,group:"볼칸 중공업"},
+{name:"요루",rarity:3,group:"볼칸 중공업"},
+{name:"헤더스",rarity:1,group:"볼칸 중공업"},
 
-{name:"엘리아OS", rarity:3, group:"힌튼 아카이브"},
+{name:"올리버",rarity:3,group:"찰스 브리게이드"},
+{name:"오지에",rarity:3,group:"찰스 브리게이드"},
+{name:"람다",rarity:3,group:"찰스 브리게이드"},
+{name:"카롤",rarity:3,group:"찰스 브리게이드"},
+{name:"모지",rarity:3,group:"찰스 브리게이드"},
+{name:"란",rarity:3,group:"찰스 브리게이드"},
+{name:"나모",rarity:2,group:"찰스 브리게이드"},
 
-{name:"렌카", rarity:3, group:"미나모토"},
-{name:"아토스", rarity:3, group:"미나모토"},
-{name:"간류", rarity:3, group:"미나모토"},
-{name:"레아", rarity:3, group:"미나모토"},
-{name:"로건", rarity:2, group:"미나모토"},
-{name:"츠카하라", rarity:1, group:"미나모토"},
+{name:"엘리아OS",rarity:3,group:"힌튼 아카이브"},
 
-{name:"랜슬롯", rarity:3, group:"아발론PMC"},
-{name:"케이", rarity:3, group:"아발론PMC"},
-{name:"트리스탄", rarity:3, group:"아발론PMC"},
-{name:"이졸데", rarity:3, group:"아발론PMC"},
-{name:"노미", rarity:3, group:"아발론PMC"},
-{name:"가레스", rarity:2, group:"아발론PMC"},
-{name:"이졸드", rarity:2, group:"아발론PMC"},
+{name:"렌카",rarity:3,group:"미나모토"},
+{name:"아토스",rarity:3,group:"미나모토"},
+{name:"간류",rarity:3,group:"미나모토"},
+{name:"레아",rarity:3,group:"미나모토"},
+{name:"로건",rarity:2,group:"미나모토"},
+{name:"츠카하라",rarity:1,group:"미나모토"},
 
-{name:"미래", rarity:3, group:"서천그룹"},
-{name:"리", rarity:3, group:"서천그룹"},
-{name:"이안", rarity:2, group:"서천그룹"},
-{name:"리나", rarity:1, group:"서천그룹"},
+{name:"랜슬롯",rarity:3,group:"아발론PMC"},
+{name:"케이",rarity:3,group:"아발론PMC"},
+{name:"트리스탄",rarity:3,group:"아발론PMC"},
+{name:"이졸데",rarity:3,group:"아발론PMC"},
+{name:"노미",rarity:3,group:"아발론PMC"},
+{name:"가레스",rarity:2,group:"아발론PMC"},
+{name:"이졸드",rarity:2,group:"아발론PMC"},
 
-{name:"스테파네트", rarity:3, group:"솔레어"},
-{name:"뮌하우젠", rarity:2, group:"솔레어"}
+{name:"미래",rarity:3,group:"서천그룹"},
+{name:"리",rarity:3,group:"서천그룹"},
+{name:"이안",rarity:2,group:"서천그룹"},
+{name:"리나",rarity:1,group:"서천그룹"},
+
+{name:"스테파네트",rarity:3,group:"솔레어"},
+{name:"뮌하우젠",rarity:2,group:"솔레어"}
+
 ];
 
-// ======================
-// 상태
-// ======================
+// ================= 상태 =================
 
-let totalCount = parseInt(localStorage.getItem("totalCount")) || 0;
-let collection = JSON.parse(localStorage.getItem("collection")) || [];
-let sortMode = "grade";
+let totalCount = parseInt(localStorage.getItem("totalCount"))||0;
+let collection = JSON.parse(localStorage.getItem("collection"))||[];
+let sortMode="grade";
 
 updateUI();
 
-// ======================
-// 확률
-// ======================
+// ================= 유틸 =================
 
 function rollRarity(){
-    let r = Math.random();
-    if(r < 0.03) return 3;
-    if(r < 0.23) return 2;
+    let r=Math.random();
+    if(r<0.03) return 3;
+    if(r<0.23) return 2;
     return 1;
 }
 
@@ -200,91 +215,126 @@ function getClass(r){
     return "infra";
 }
 
-// ======================
-// 가챠
-// ======================
+// ================= 가챠 =================
 
 function pull(times){
 
-    let results = [];
+    let results=[];
 
     for(let i=0;i<times;i++){
-        let rarity = rollRarity();
-        let pool = DB.filter(c=>c.rarity===rarity);
-        let char = pool[Math.floor(Math.random()*pool.length)];
+        let rarity=rollRarity();
+        let pool=DB.filter(c=>c.rarity===rarity);
+        let char=pool[Math.floor(Math.random()*pool.length)];
         results.push(char);
     }
 
     if(times===10){
         if(!results.some(c=>c.rarity>=2)){
-            let ultraPool = DB.filter(c=>c.rarity===2);
-            results[9] = ultraPool[Math.floor(Math.random()*ultraPool.length)];
+            let ultraPool=DB.filter(c=>c.rarity===2);
+            results[9]=ultraPool[Math.floor(Math.random()*ultraPool.length)];
         }
     }
 
-    let output="";
+    let html="";
 
     for(let char of results){
 
         totalCount++;
 
-        let isNew = !collection.includes(char.name);
+        let isNew=!collection.includes(char.name);
         if(isNew) collection.push(char.name);
 
-        output += `<div class="${getClass(char.rarity)}">
+        html+=`
+        <div class="resultCard ${getClass(char.rarity)}">
         ${getGradeText(char.rarity)} ${char.name}
-        <span class="smallText">(${char.group})</span>
-        ${isNew ? '<span class="newMark"> New!</span>' : ''}
-        </div>`;
+        <span class="groupText">(${char.group})</span>
+        ${isNew?'<span class="newMark"> New!</span>':''}
+        </div>
+        `;
     }
 
-    document.getElementById("result").innerHTML = output;
+    document.getElementById("result").innerHTML=html;
 
-    localStorage.setItem("totalCount", totalCount);
-    localStorage.setItem("collection", JSON.stringify(collection));
+    localStorage.setItem("totalCount",totalCount);
+    localStorage.setItem("collection",JSON.stringify(collection));
 
     updateUI();
 }
 
-// ======================
-// 정렬
-// ======================
+// ================= 정렬 =================
 
 function setSort(mode){
-    sortMode = mode;
+    sortMode=mode;
     updateUI();
 }
 
 function updateUI(){
-    document.getElementById("totalCount").textContent = totalCount;
 
-    let owned = DB.filter(c=>collection.includes(c.name));
+    document.getElementById("totalCount").textContent=totalCount;
 
-    if(sortMode==="name"){
-        owned.sort((a,b)=>a.name.localeCompare(b.name,"ko"));
-    }
-    else if(sortMode==="group"){
-        owned.sort((a,b)=>a.group.localeCompare(b.group,"ko"));
-    }
-    else{
-        owned.sort((a,b)=>b.rarity-a.rarity);
-    }
-
+    let owned=DB.filter(c=>collection.includes(c.name));
     let html="";
-    for(let c of owned){
-        html += `<div class="${getClass(c.rarity)}">
-        ${getGradeText(c.rarity)} ${c.name}
-        <span class="smallText">(${c.group})</span>
-        </div>`;
+
+    if(sortMode==="all"){
+
+        let sorted=[...DB].sort((a,b)=>b.rarity-a.rarity);
+
+        for(let c of sorted){
+            let ownedFlag=collection.includes(c.name);
+            html+=`
+            <div class="${getClass(c.rarity)} ${ownedFlag?'':'dimmed'}">
+            ${getGradeText(c.rarity)} ${c.name}
+            <span class="groupText">(${c.group})</span>
+            </div>
+            `;
+        }
+
+    } else if(sortMode==="name"){
+
+        owned.sort((a,b)=>a.name.localeCompare(b.name,"ko"));
+
+        for(let c of owned){
+            html+=`
+            <div class="${getClass(c.rarity)}">
+            ${getGradeText(c.rarity)} ${c.name}
+            <span class="groupText">(${c.group})</span>
+            </div>`;
+        }
+
+    } else if(sortMode==="group"){
+
+        owned.sort((a,b)=>a.group.localeCompare(b.group,"ko"));
+
+        let currentGroup="";
+
+        for(let c of owned){
+            if(c.group!==currentGroup){
+                currentGroup=c.group;
+                html+=`<hr><strong>${currentGroup}</strong><br>`;
+            }
+            html+=`
+            <div class="${getClass(c.rarity)}">
+            ${getGradeText(c.rarity)} ${c.name}
+            </div>`;
+        }
+
+    } else { // grade
+
+        owned.sort((a,b)=>b.rarity-a.rarity);
+
+        for(let c of owned){
+            html+=`
+            <div class="${getClass(c.rarity)}">
+            ${getGradeText(c.rarity)} ${c.name}
+            <span class="groupText">(${c.group})</span>
+            </div>`;
+        }
     }
 
-    document.getElementById("collectionList").innerHTML =
-        html || "없음";
+    document.getElementById("collectionArea").innerHTML=html||"없음";
 }
 
-// ======================
-// 리셋
-// ======================
+// ================= 리셋 =================
 
 function resetData(){
     if(confirm("정말로 모든 기록을 초기화하시겠습니까?")){
