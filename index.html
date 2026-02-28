@@ -1,37 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>집중 헤드헌팅</title>
+
+<style>
+body {
+    font-family: sans-serif;
+    text-align: center;
+    padding: 20px;
+    background: #111;
+    color: white;
+}
+
+button {
+    font-size: 20px;
+    padding: 10px 20px;
+    margin: 10px;
+}
+
+.infra { color: red; }
+.ultra { color: violet; }
+.lumen { color: silver; }
+
+.pickupMark {
+    font-weight: bold;
+}
+
+.subtitle {
+    font-size: 14px;
+    color: #aaa;
+    margin-top: -10px;
+    margin-bottom: 20px;
+}
+
+.bannerTitle {
+    font-size: 16px;
+    color: silver;
+}
+</style>
+</head>
+
+<body>
+
+<h2>[집중 헤드헌팅]</h2>
+
+<div class="subtitle">
+<span class="bannerTitle">쌓아올리는 등불의 벨 에포크</span><br>
+픽업 대상: [LUMEN(★★★)]발렌티나 / [ULTRA(★★)]올가
+</div>
+
+<button onclick="pull(1)">1회</button>
+<button onclick="pull(10)">10회</button>
+
+<div id="result"></div>
+
+<script>
+
+// ======================
+// 캐릭터 DB
+// ======================
+
+let DB = [
+    {name:"발렌티나", rarity:3, weight:1},
+    {name:"백연", rarity:3, weight:1},
+    {name:"도로시", rarity:3, weight:1},
+    {name:"마리", rarity:3, weight:1},
+    {name:"로렌츠", rarity:3, weight:1},
+
+    {name:"올가", rarity:2, weight:1},
+    {name:"나모", rarity:2, weight:1},
+    {name:"올리버", rarity:2, weight:1},
+    {name:"유나", rarity:2, weight:1},
+    {name:"암젤", rarity:2, weight:1},
+    {name:"니콜라", rarity:2, weight:1},
+
+    {name:"재클린", rarity:1, weight:1},
+    {name:"할", rarity:1, weight:1},
+    {name:"헤더스", rarity:1, weight:1},
+    {name:"프리츠", rarity:1, weight:1},
+    {name:"에밀리", rarity:1, weight:1},
+    {name:"베르너", rarity:1, weight:1}
+];
+
+// ======================
+// 현재 픽업 설정
+// ======================
+
+let PICKUP_3 = "발렌티나";
+let PICKUP_2 = "올가";
+
+// ======================
+// 픽업 가중치 적용
+// ======================
+
+function applyPickupWeights(){
+    DB.forEach(c => {
+        c.weight = 1;
+
+        if(PICKUP_3 && c.name === PICKUP_3){
+            c.weight = 5;
+        }
+        if(PICKUP_2 && c.name === PICKUP_2){
+            c.weight = 4;
+        }
+    });
+}
+
+applyPickupWeights();
+
+// ======================
+// 희귀도 확률
+// ======================
+
+function rollRarity(){
+    let r = Math.random();
+    if(r < 0.03) return 3;
+    if(r < 0.23) return 2;
+    return 1;
+}
+
+// ======================
+// 가중치 랜덤 선택
+// ======================
+
+function weightedRandom(pool){
+    let totalWeight = pool.reduce((sum,c)=>sum+c.weight,0);
+    let r = Math.random() * totalWeight;
+
+    for(let c of pool){
+        if(r < c.weight) return c;
+        r -= c.weight;
+    }
+}
+
+// ======================
+// 색상 클래스
+// ======================
+
+function getClass(rarity){
+    if(rarity === 3) return "lumen";
+    if(rarity === 2) return "ultra";
+    return "infra";
+}
+
+// ======================
+// 등급 텍스트
+// ======================
+
+function getGradeText(rarity){
+    if(rarity === 3) return "[LUMEN(★★★)]";
+    if(rarity === 2) return "[ULTRA(★★)]";
+    return "[INFRA(★)]";
+}
+
+// ======================
+// 뽑기 실행 (10연 보장 포함)
+// ======================
+
 function pull(times){
 
     let results = [];
 
     for(let i=0;i<times;i++){
-
         let rarity = rollRarity();
         let pool = DB.filter(c => c.rarity === rarity);
         let char = weightedRandom(pool);
-
         results.push(char);
     }
 
-    // ======================
-    // 10회 보장 로직
-    // ======================
-
+    // 10연 보장 로직
     if(times === 10){
         let hasUltraOrHigher = results.some(c => c.rarity >= 2);
 
         if(!hasUltraOrHigher){
-            // 2성 풀에서 하나 강제 선택
             let ultraPool = DB.filter(c => c.rarity === 2);
             let guaranteed = weightedRandom(ultraPool);
-
-            // 마지막 결과를 교체
-            results[9] = guaranteed;
+            results[9] = guaranteed; // 마지막 결과 교체
         }
     }
 
-    // ======================
     // 출력
-    // ======================
-
     let output = "";
 
     for(let char of results){
@@ -48,3 +197,8 @@ function pull(times){
 
     document.getElementById("result").innerHTML = output;
 }
+
+</script>
+
+</body>
+</html>
