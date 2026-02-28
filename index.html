@@ -7,62 +7,53 @@
 <style>
 body {
     font-family: sans-serif;
-    text-align: center;
-    padding: 20px;
     background: #111;
     color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+h2 { margin-bottom: 5px; }
+
+.sectionBox {
+    border: 1px solid #333;
+    padding: 15px;
+    margin-top: 15px;
+    border-radius: 8px;
+    background: #1a1a1a;
 }
 
 button {
-    font-size: 18px;
-    padding: 8px 18px;
-    margin: 8px;
+    width: 120px;
+    height: 40px;
+    margin: 6px;
+    border-radius: 6px;
+    border: none;
+    background: #222;
+    color: white;
+    cursor: pointer;
 }
+
+button:hover { background: #333; }
 
 .infra { color: red; }
 .ultra { color: violet; }
 .lumen { color: silver; }
 
-.pickupMark { font-weight: bold; }
+.newMark { color: gold; font-weight: bold; }
 
 .subtitle {
     font-size: 14px;
     color: #aaa;
-    margin-top: -10px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
-.bannerTitle {
-    font-size: 16px;
-    color: silver;
-}
+.smallText { font-size: 12px; color: #888; }
 
-.stats {
-    margin-top: 20px;
-    font-size: 14px;
-    color: #ccc;
-}
-
-.collection {
-    margin-top: 15px;
-    font-size: 13px;
-    color: #bbb;
-}
-
-.collectionSection {
-    margin-top: 10px;
-}
-
-.newMark {
-    color: gold;
-    font-weight: bold;
-}
-
-.resetBtn {
-    margin-top: 15px;
-    background: #333;
-    color: #fff;
-    border: 1px solid #555;
+hr {
+    border: none;
+    border-top: 1px solid #333;
+    margin: 15px 0;
 }
 </style>
 </head>
@@ -70,95 +61,121 @@ button {
 <body>
 
 <h2>[집중 헤드헌팅]</h2>
-
 <div class="subtitle">
-<span class="bannerTitle">쌓아올리는 등불의 벨 에포크</span><br>
+쌓아올리는 등불의 벨 에포크<br>
 픽업 대상: [LUMEN(★★★)]발렌티나 / [ULTRA(★★)]올가
 </div>
 
+<div class="sectionBox">
 <button onclick="pull(1)">1회</button>
 <button onclick="pull(10)">10회</button>
-
 <div id="result"></div>
+</div>
 
-<div class="stats">
+<div class="sectionBox">
 총 뽑기 횟수: <span id="totalCount">0</span>
+<hr>
+정렬 방식:
+<button onclick="setSort('grade')">등급별</button>
+<button onclick="setSort('name')">가나다순</button>
+<button onclick="setSort('group')">소속별</button>
+
+<div id="collectionList"></div>
 </div>
 
-<div class="collection">
-<h3>획득한 캐릭터</h3>
-
-<div class="collectionSection lumen">
-<strong>LUMEN (★★★)</strong><br>
-<span id="col3">없음</span>
+<div class="sectionBox">
+<button onclick="resetData()">리셋</button>
 </div>
-
-<div class="collectionSection ultra">
-<strong>ULTRA (★★)</strong><br>
-<span id="col2">없음</span>
-</div>
-
-<div class="collectionSection infra">
-<strong>INFRA (★)</strong><br>
-<span id="col1">없음</span>
-</div>
-
-</div>
-
-<button class="resetBtn" onclick="resetData()">리셋</button>
 
 <script>
 
 // ======================
-// DB
+// DB (소속 포함)
 // ======================
 
 let DB = [
-    {name:"발렌티나", rarity:3, weight:1},
-    {name:"백연", rarity:3, weight:1},
-    {name:"도로시", rarity:3, weight:1},
-    {name:"마리", rarity:3, weight:1},
-    {name:"로렌츠", rarity:3, weight:1},
+{name:"발렌티나", rarity:3, group:"등불사무소"},
+{name:"도로시", rarity:3, group:"등불사무소"},
+{name:"백연", rarity:3, group:"등불사무소"},
+{name:"쿠로세", rarity:3, group:"등불사무소"},
+{name:"올가", rarity:3, group:"등불사무소"},
+{name:"비아트리스", rarity:3, group:"등불사무소"},
+{name:"유나", rarity:2, group:"등불사무소"},
+{name:"오웬", rarity:2, group:"등불사무소"},
+{name:"할", rarity:1, group:"등불사무소"},
+{name:"재클린", rarity:1, group:"등불사무소"},
 
-    {name:"올가", rarity:2, weight:1},
-    {name:"나모", rarity:2, weight:1},
-    {name:"올리버", rarity:2, weight:1},
-    {name:"유나", rarity:2, weight:1},
-    {name:"암젤", rarity:2, weight:1},
-    {name:"니콜라", rarity:2, weight:1},
+{name:"마리", rarity:3, group:"아스트론 학파 연구지구"},
+{name:"가온", rarity:3, group:"아스트론 학파 연구지구"},
+{name:"아이린", rarity:3, group:"아스트론 학파 연구지구"},
+{name:"노딘", rarity:3, group:"아스트론 학파 연구지구"},
+{name:"니콜라", rarity:2, group:"아스트론 학파 연구지구"},
+{name:"로렌츠", rarity:2, group:"아스트론 학파 연구지구"},
+{name:"프리츠", rarity:1, group:"아스트론 학파 연구지구"},
+{name:"베르너", rarity:1, group:"아스트론 학파 연구지구"},
 
-    {name:"재클린", rarity:1, weight:1},
-    {name:"할", rarity:1, weight:1},
-    {name:"헤더스", rarity:1, weight:1},
-    {name:"프리츠", rarity:1, weight:1},
-    {name:"에밀리", rarity:1, weight:1},
-    {name:"베르너", rarity:1, weight:1}
+{name:"셀렌느", rarity:3, group:"하르덴브라흐"},
+{name:"마커스", rarity:3, group:"하르덴브라흐"},
+{name:"암젤", rarity:2, group:"하르덴브라흐"},
+{name:"에밀리", rarity:1, group:"하르덴브라흐"},
+
+{name:"안드레이", rarity:3, group:"66구역"},
+{name:"드미트리", rarity:3, group:"66구역"},
+{name:"공주", rarity:3, group:"66구역"},
+{name:"안나", rarity:2, group:"66구역"},
+
+{name:"모리어티", rarity:3, group:"터미널15"},
+{name:"미셸", rarity:3, group:"터미널15"},
+{name:"카산드라", rarity:3, group:"터미널15"},
+{name:"제럴드", rarity:1, group:"터미널15"},
+
+{name:"루핀", rarity:3, group:"볼칸 중공업"},
+{name:"요루", rarity:3, group:"볼칸 중공업"},
+{name:"헤더스", rarity:1, group:"볼칸 중공업"},
+
+{name:"올리버", rarity:3, group:"찰스 브리게이드"},
+{name:"오지에", rarity:3, group:"찰스 브리게이드"},
+{name:"람다", rarity:3, group:"찰스 브리게이드"},
+{name:"카롤", rarity:3, group:"찰스 브리게이드"},
+{name:"모지", rarity:3, group:"찰스 브리게이드"},
+{name:"란", rarity:3, group:"찰스 브리게이드"},
+{name:"나모", rarity:2, group:"찰스 브리게이드"},
+
+{name:"엘리아OS", rarity:3, group:"힌튼 아카이브"},
+
+{name:"렌카", rarity:3, group:"미나모토"},
+{name:"아토스", rarity:3, group:"미나모토"},
+{name:"간류", rarity:3, group:"미나모토"},
+{name:"레아", rarity:3, group:"미나모토"},
+{name:"로건", rarity:2, group:"미나모토"},
+{name:"츠카하라", rarity:1, group:"미나모토"},
+
+{name:"랜슬롯", rarity:3, group:"아발론PMC"},
+{name:"케이", rarity:3, group:"아발론PMC"},
+{name:"트리스탄", rarity:3, group:"아발론PMC"},
+{name:"이졸데", rarity:3, group:"아발론PMC"},
+{name:"노미", rarity:3, group:"아발론PMC"},
+{name:"가레스", rarity:2, group:"아발론PMC"},
+{name:"이졸드", rarity:2, group:"아발론PMC"},
+
+{name:"미래", rarity:3, group:"서천그룹"},
+{name:"리", rarity:3, group:"서천그룹"},
+{name:"이안", rarity:2, group:"서천그룹"},
+{name:"리나", rarity:1, group:"서천그룹"},
+
+{name:"스테파네트", rarity:3, group:"솔레어"},
+{name:"뮌하우젠", rarity:2, group:"솔레어"}
 ];
 
-let PICKUP_3 = "발렌티나";
-let PICKUP_2 = "올가";
-
 // ======================
-// 저장 데이터
+// 상태
 // ======================
 
 let totalCount = parseInt(localStorage.getItem("totalCount")) || 0;
 let collection = JSON.parse(localStorage.getItem("collection")) || [];
+let sortMode = "grade";
 
-updateStats();
-
-// ======================
-// 픽업 가중치
-// ======================
-
-function applyPickupWeights(){
-    DB.forEach(c => {
-        c.weight = 1;
-        if(PICKUP_3 && c.name === PICKUP_3) c.weight = 5;
-        if(PICKUP_2 && c.name === PICKUP_2) c.weight = 4;
-    });
-}
-applyPickupWeights();
+updateUI();
 
 // ======================
 // 확률
@@ -171,29 +188,20 @@ function rollRarity(){
     return 1;
 }
 
-function weightedRandom(pool){
-    let totalWeight = pool.reduce((sum,c)=>sum+c.weight,0);
-    let r = Math.random() * totalWeight;
-    for(let c of pool){
-        if(r < c.weight) return c;
-        r -= c.weight;
-    }
-}
-
-function getClass(rarity){
-    if(rarity === 3) return "lumen";
-    if(rarity === 2) return "ultra";
-    return "infra";
-}
-
-function getGradeText(rarity){
-    if(rarity === 3) return "[LUMEN(★★★)]";
-    if(rarity === 2) return "[ULTRA(★★)]";
+function getGradeText(r){
+    if(r===3) return "[LUMEN(★★★)]";
+    if(r===2) return "[ULTRA(★★)]";
     return "[INFRA(★)]";
 }
 
+function getClass(r){
+    if(r===3) return "lumen";
+    if(r===2) return "ultra";
+    return "infra";
+}
+
 // ======================
-// 뽑기
+// 가챠
 // ======================
 
 function pull(times){
@@ -202,35 +210,30 @@ function pull(times){
 
     for(let i=0;i<times;i++){
         let rarity = rollRarity();
-        let pool = DB.filter(c => c.rarity === rarity);
-        let char = weightedRandom(pool);
+        let pool = DB.filter(c=>c.rarity===rarity);
+        let char = pool[Math.floor(Math.random()*pool.length)];
         results.push(char);
     }
 
-    if(times === 10){
-        let hasUltraOrHigher = results.some(c => c.rarity >= 2);
-        if(!hasUltraOrHigher){
-            let ultraPool = DB.filter(c => c.rarity === 2);
-            results[9] = weightedRandom(ultraPool);
+    if(times===10){
+        if(!results.some(c=>c.rarity>=2)){
+            let ultraPool = DB.filter(c=>c.rarity===2);
+            results[9] = ultraPool[Math.floor(Math.random()*ultraPool.length)];
         }
     }
 
-    let output = "";
+    let output="";
 
     for(let char of results){
 
         totalCount++;
 
-        let isPickup =
-            (PICKUP_3 && char.name === PICKUP_3) ||
-            (PICKUP_2 && char.name === PICKUP_2);
-
         let isNew = !collection.includes(char.name);
         if(isNew) collection.push(char.name);
 
-        output += `<div class="${getClass(char.rarity)} ${isPickup ? 'pickupMark':''}">
+        output += `<div class="${getClass(char.rarity)}">
         ${getGradeText(char.rarity)} ${char.name}
-        ${isPickup ? '[PICK UP]' : ''}
+        <span class="smallText">(${char.group})</span>
         ${isNew ? '<span class="newMark"> New!</span>' : ''}
         </div>`;
     }
@@ -240,38 +243,43 @@ function pull(times){
     localStorage.setItem("totalCount", totalCount);
     localStorage.setItem("collection", JSON.stringify(collection));
 
-    updateStats();
+    updateUI();
 }
 
 // ======================
-// 통계 & 컬렉션 표시
+// 정렬
 // ======================
 
-function updateStats(){
+function setSort(mode){
+    sortMode = mode;
+    updateUI();
+}
 
+function updateUI(){
     document.getElementById("totalCount").textContent = totalCount;
 
-    let col3 = [];
-    let col2 = [];
-    let col1 = [];
+    let owned = DB.filter(c=>collection.includes(c.name));
 
-    for(let name of collection){
-        let char = DB.find(c => c.name === name);
-        if(!char) continue;
-
-        if(char.rarity === 3) col3.push(name);
-        if(char.rarity === 2) col2.push(name);
-        if(char.rarity === 1) col1.push(name);
+    if(sortMode==="name"){
+        owned.sort((a,b)=>a.name.localeCompare(b.name,"ko"));
+    }
+    else if(sortMode==="group"){
+        owned.sort((a,b)=>a.group.localeCompare(b.group,"ko"));
+    }
+    else{
+        owned.sort((a,b)=>b.rarity-a.rarity);
     }
 
-    document.getElementById("col3").textContent =
-        col3.length ? col3.join(", ") : "없음";
+    let html="";
+    for(let c of owned){
+        html += `<div class="${getClass(c.rarity)}">
+        ${getGradeText(c.rarity)} ${c.name}
+        <span class="smallText">(${c.group})</span>
+        </div>`;
+    }
 
-    document.getElementById("col2").textContent =
-        col2.length ? col2.join(", ") : "없음";
-
-    document.getElementById("col1").textContent =
-        col1.length ? col1.join(", ") : "없음";
+    document.getElementById("collectionList").innerHTML =
+        html || "없음";
 }
 
 // ======================
@@ -280,15 +288,14 @@ function updateStats(){
 
 function resetData(){
     if(confirm("정말로 모든 기록을 초기화하시겠습니까?")){
-        totalCount = 0;
-        collection = [];
+        totalCount=0;
+        collection=[];
         localStorage.clear();
-        document.getElementById("result").innerHTML = "";
-        updateStats();
+        document.getElementById("result").innerHTML="";
+        updateUI();
     }
 }
 
 </script>
-
 </body>
 </html>
