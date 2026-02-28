@@ -7,40 +7,12 @@
 <style>
 body{font-family:sans-serif;background:#111;color:white;padding:20px;}
 h2{text-align:center;margin-bottom:5px;}
+.subtitle{text-align:center;font-size:14px;color:#aaa;margin-bottom:20px;line-height:1.6;}
 
-.subtitle{
-text-align:center;
-font-size:14px;
-color:#aaa;
-margin-bottom:20px;
-line-height:1.6;
-}
+.section{border:1px solid #333;border-radius:8px;padding:15px;margin-bottom:20px;background:#151515;}
+.resultCard{background:#1c1c1c;padding:10px;border-radius:6px;margin-bottom:8px;}
 
-.section{
-border:1px solid #333;
-border-radius:8px;
-padding:15px;
-margin-bottom:20px;
-background:#151515;
-}
-
-.resultCard{
-background:#1c1c1c;
-padding:10px;
-border-radius:6px;
-margin-bottom:8px;
-}
-
-button{
-width:120px;
-height:38px;
-margin:6px;
-border:none;
-border-radius:6px;
-background:#222;
-color:white;
-cursor:pointer;
-}
+button{width:120px;height:38px;margin:6px;border:none;border-radius:6px;background:#222;color:white;cursor:pointer;}
 button:hover{background:#333;}
 
 .infra{color:red;}
@@ -54,17 +26,12 @@ button:hover{background:#333;}
 .sortBtns{text-align:center;margin-bottom:10px;}
 
 .glowLabel{color:orange;font-weight:bold;}
-.glowBtn{
-color:gold;
-font-weight:bold;
-cursor:pointer;
-margin-left:6px;
-}
+.glowBtn{color:gold;font-weight:bold;cursor:pointer;margin-left:6px;}
 .glowBtn:hover{color:orange;}
 
 hr{border:none;border-top:1px solid #333;margin:10px 0;}
 
-/* ===== 팝업 ===== */
+/* 팝업 */
 .modal{
 display:none;
 position:fixed;
@@ -74,7 +41,6 @@ background:rgba(0,0,0,0.7);
 justify-content:center;
 align-items:center;
 }
-
 .modalContent{
 background:#1b1b1b;
 padding:20px;
@@ -84,27 +50,19 @@ max-height:80%;
 overflow:auto;
 border:1px solid #444;
 }
-
 .modalHeader{
 color:orange;
 font-weight:bold;
 margin-bottom:10px;
 }
-
 .closeBtn{
 float:right;
 cursor:pointer;
 color:#aaa;
 }
 .closeBtn:hover{color:white;}
-
 .exchangeBtn{
-width:auto;
-height:auto;
-padding:4px 8px;
-margin-left:8px;
-font-size:12px;
-background:#333;
+width:auto;height:auto;padding:4px 8px;margin-left:8px;font-size:12px;background:#333;
 }
 </style>
 </head>
@@ -120,7 +78,6 @@ background:#333;
 <span class="ultra">[ULTRA(★★)] 올가</span>
 </div>
 
-<!-- 가챠 영역 -->
 <div class="section">
 <div style="text-align:center;">
 <button onclick="pull(1)">1회</button>
@@ -129,7 +86,6 @@ background:#333;
 <div id="result"></div>
 </div>
 
-<!-- 도감 영역 -->
 <div class="section">
 총 뽑기 횟수: <span id="totalCount">0</span> |
 <span class="glowLabel">잔광: <span id="glowCount">0</span></span>
@@ -150,7 +106,7 @@ background:#333;
 <button onclick="resetData()">리셋</button>
 </div>
 
-<!-- ===== 잔광 보정 팝업 ===== -->
+<!-- 잔광 팝업 -->
 <div id="glowModal" class="modal">
 <div class="modalContent">
 <div class="modalHeader">
@@ -163,39 +119,98 @@ background:#333;
 
 <script>
 
-// ===== DB =====
-// (여기에 이전에 사용한 전체 DB 그대로 붙여넣기)
-let DB = window.DB || [];
+// ================= DB =================
+let DB = [
 
-// ===== 상태 =====
-let totalCount = parseInt(localStorage.getItem("totalCount"))||0;
-let collection = JSON.parse(localStorage.getItem("collection"))||[];
-let glow = parseInt(localStorage.getItem("glow"))||0;
+{name:"발렌티나",rarity:3,group:"등불사무소"},
+{name:"도로시",rarity:3,group:"등불사무소"},
+{name:"백연",rarity:3,group:"등불사무소"},
+{name:"쿠로세",rarity:3,group:"등불사무소"},
+{name:"올가",rarity:3,group:"등불사무소"},
+{name:"비아트리스",rarity:3,group:"등불사무소"},
+{name:"유나",rarity:2,group:"등불사무소"},
+{name:"오웬",rarity:2,group:"등불사무소"},
+{name:"할",rarity:1,group:"등불사무소"},
+{name:"재클린",rarity:1,group:"등불사무소"},
+
+{name:"마리",rarity:3,group:"아스트론 학파 연구지구"},
+{name:"가온",rarity:3,group:"아스트론 학파 연구지구"},
+{name:"아이린",rarity:3,group:"아스트론 학파 연구지구"},
+{name:"노딘",rarity:3,group:"아스트론 학파 연구지구"},
+{name:"니콜라",rarity:2,group:"아스트론 학파 연구지구"},
+{name:"로렌츠",rarity:2,group:"아스트론 학파 연구지구"},
+{name:"프리츠",rarity:1,group:"아스트론 학파 연구지구"},
+{name:"베르너",rarity:1,group:"아스트론 학파 연구지구"},
+
+{name:"셀렌느",rarity:3,group:"하르덴브라흐"},
+{name:"마커스",rarity:3,group:"하르덴브라흐"},
+{name:"암젤",rarity:2,group:"하르덴브라흐"},
+{name:"에밀리",rarity:1,group:"하르덴브라흐"},
+
+{name:"안드레이",rarity:3,group:"66구역"},
+{name:"드미트리",rarity:3,group:"66구역"},
+{name:"공주",rarity:3,group:"66구역"},
+{name:"안나",rarity:2,group:"66구역"},
+
+{name:"모리어티",rarity:3,group:"터미널15"},
+{name:"미셸",rarity:3,group:"터미널15"},
+{name:"카산드라",rarity:3,group:"터미널15"},
+{name:"제럴드",rarity:1,group:"터미널15"},
+
+{name:"루핀",rarity:3,group:"볼칸 중공업"},
+{name:"요루",rarity:3,group:"볼칸 중공업"},
+{name:"헤더스",rarity:1,group:"볼칸 중공업"},
+
+{name:"올리버",rarity:3,group:"찰스 브리게이드"},
+{name:"오지에",rarity:3,group:"찰스 브리게이드"},
+{name:"람다",rarity:3,group:"찰스 브리게이드"},
+{name:"카롤",rarity:3,group:"찰스 브리게이드"},
+{name:"모지",rarity:3,group:"찰스 브리게이드"},
+{name:"란",rarity:3,group:"찰스 브리게이드"},
+{name:"나모",rarity:2,group:"찰스 브리게이드"},
+
+{name:"엘리아OS",rarity:3,group:"힌튼 아카이브"},
+
+{name:"렌카",rarity:3,group:"미나모토"},
+{name:"아토스",rarity:3,group:"미나모토"},
+{name:"간류",rarity:3,group:"미나모토"},
+{name:"레아",rarity:3,group:"미나모토"},
+{name:"로건",rarity:2,group:"미나모토"},
+{name:"츠카하라",rarity:1,group:"미나모토"},
+
+{name:"랜슬롯",rarity:3,group:"아발론PMC"},
+{name:"케이",rarity:3,group:"아발론PMC"},
+{name:"트리스탄",rarity:3,group:"아발론PMC"},
+{name:"이졸데",rarity:3,group:"아발론PMC"},
+{name:"노미",rarity:3,group:"아발론PMC"},
+{name:"가레스",rarity:2,group:"아발론PMC"},
+{name:"이졸드",rarity:2,group:"아발론PMC"},
+
+{name:"미래",rarity:3,group:"서천그룹"},
+{name:"리",rarity:3,group:"서천그룹"},
+{name:"이안",rarity:2,group:"서천그룹"},
+{name:"리나",rarity:1,group:"서천그룹"},
+
+{name:"스테파네트",rarity:3,group:"솔레어"},
+{name:"뮌하우젠",rarity:2,group:"솔레어"}
+
+];
+
+// ================= 상태 =================
+let totalCount=parseInt(localStorage.getItem("totalCount"))||0;
+let collection=JSON.parse(localStorage.getItem("collection"))||[];
+let glow=parseInt(localStorage.getItem("glow"))||0;
 let sortMode="grade";
 
 updateUI();
 
-// ===== 유틸 =====
-function rollRarity(){
-let r=Math.random();
-if(r<0.03) return 3;
-if(r<0.23) return 2;
-return 1;
-}
-function getGradeText(r){
-if(r===3) return "[LUMEN(★★★)]";
-if(r===2) return "[ULTRA(★★)]";
-return "[INFRA(★)]";
-}
-function getClass(r){
-if(r===3) return "lumen";
-if(r===2) return "ultra";
-return "infra";
-}
+// ================= 유틸 =================
+function rollRarity(){let r=Math.random();if(r<0.03)return 3;if(r<0.23)return 2;return 1;}
+function getGradeText(r){if(r===3)return "[LUMEN(★★★)]";if(r===2)return "[ULTRA(★★)]";return "[INFRA(★)]";}
+function getClass(r){if(r===3)return "lumen";if(r===2)return "ultra";return "infra";}
 
-// ===== 가챠 =====
+// ================= 가챠 =================
 function pull(times){
-
 let results=[];
 for(let i=0;i<times;i++){
 let rarity=rollRarity();
@@ -203,73 +218,51 @@ let pool=DB.filter(c=>c.rarity===rarity);
 let char=pool[Math.floor(Math.random()*pool.length)];
 results.push(char);
 }
-
-if(times===10){
-if(!results.some(c=>c.rarity>=2)){
+if(times===10&&!results.some(c=>c.rarity>=2)){
 let ultraPool=DB.filter(c=>c.rarity===2);
 results[9]=ultraPool[Math.floor(Math.random()*ultraPool.length)];
 }
-}
-
 let html="";
-
 for(let char of results){
-
-totalCount++;
-glow++;
-
+totalCount++;glow++;
 let isNew=!collection.includes(char.name);
-if(isNew) collection.push(char.name);
-
-html+=`
-<div class="resultCard ${getClass(char.rarity)}">
+if(isNew)collection.push(char.name);
+html+=`<div class="resultCard ${getClass(char.rarity)}">
 ${getGradeText(char.rarity)} ${char.name}
 <span class="groupText">(${char.group})</span>
 ${isNew?'<span class="newMark"> New!</span>':''}
-</div>
-`;
+</div>`;
 }
-
 document.getElementById("result").innerHTML=html;
-
 localStorage.setItem("totalCount",totalCount);
 localStorage.setItem("collection",JSON.stringify(collection));
 localStorage.setItem("glow",glow);
-
 updateUI();
 }
 
-// ===== 잔광 팝업 =====
-function openModal(){
-document.getElementById("glowModal").style.display="flex";
-renderExchange();
-}
-function closeModal(){
-document.getElementById("glowModal").style.display="none";
-}
+// ================= 잔광 교환 =================
+function openModal(){document.getElementById("glowModal").style.display="flex";renderExchange();}
+function closeModal(){document.getElementById("glowModal").style.display="none";}
 function renderExchange(){
 let html="";
 for(let c of DB){
-let cost = c.rarity===3?200:(c.rarity===2?50:null);
-if(!cost) continue;
-let disabled = glow<cost;
-html+=`
-<div class="${getClass(c.rarity)}">
+let cost=c.rarity===3?200:(c.rarity===2?50:null);
+if(!cost)continue;
+let disabled=glow<cost;
+html+=`<div class="${getClass(c.rarity)}">
 ${getGradeText(c.rarity)} ${c.name}
 <span class="groupText">(${c.group})</span>
-<button class="exchangeBtn" onclick="exchange('${c.name}',${cost})"
-${disabled?'disabled':''}>
+<button class="exchangeBtn" onclick="exchange('${c.name}',${cost})" ${disabled?'disabled':''}>
 교환 (${cost})
-</button>
-</div>`;
+</button></div>`;
 }
 document.getElementById("exchangeList").innerHTML=html;
 }
 function exchange(name,cost){
-if(glow<cost) return;
+if(glow<cost)return;
 if(confirm(name+"을(를) 잔광 "+cost+"으로 교환하시겠습니까?")){
 glow-=cost;
-if(!collection.includes(name)) collection.push(name);
+if(!collection.includes(name))collection.push(name);
 localStorage.setItem("glow",glow);
 localStorage.setItem("collection",JSON.stringify(collection));
 updateUI();
@@ -277,10 +270,9 @@ renderExchange();
 }
 }
 
-// ===== 정렬 =====
+// ================= 정렬 =================
 function setSort(mode){sortMode=mode;updateUI();}
 function updateUI(){
-
 document.getElementById("totalCount").textContent=totalCount;
 document.getElementById("glowCount").textContent=glow;
 
@@ -291,42 +283,34 @@ if(sortMode==="all"){
 let sorted=[...DB].sort((a,b)=>b.rarity-a.rarity);
 for(let c of sorted){
 let ownedFlag=collection.includes(c.name);
-html+=`
-<div class="${getClass(c.rarity)} ${ownedFlag?'':'dimmed'}">
+html+=`<div class="${getClass(c.rarity)} ${ownedFlag?'':'dimmed'}">
 ${getGradeText(c.rarity)} ${c.name}
-<span class="groupText">(${c.group})</span>
-</div>`;
+<span class="groupText">(${c.group})</span></div>`;
 }
-}
-else{
+}else{
 owned.sort((a,b)=>{
-if(sortMode==="name") return a.name.localeCompare(b.name,"ko");
-if(sortMode==="group") return a.group.localeCompare(b.group,"ko");
+if(sortMode==="name")return a.name.localeCompare(b.name,"ko");
+if(sortMode==="group")return a.group.localeCompare(b.group,"ko");
 return b.rarity-a.rarity;
 });
 let currentGroup="";
 for(let c of owned){
-if(sortMode==="group" && c.group!==currentGroup){
+if(sortMode==="group"&&c.group!==currentGroup){
 currentGroup=c.group;
 html+=`<hr><strong>${currentGroup}</strong><br>`;
 }
-html+=`
-<div class="${getClass(c.rarity)}">
+html+=`<div class="${getClass(c.rarity)}">
 ${getGradeText(c.rarity)} ${c.name}
-<span class="groupText">(${c.group})</span>
-</div>`;
+<span class="groupText">(${c.group})</span></div>`;
 }
 }
-
 document.getElementById("collectionArea").innerHTML=html||"없음";
 }
 
-// ===== 리셋 =====
+// ================= 리셋 =================
 function resetData(){
 if(confirm("정말로 모든 기록을 초기화하시겠습니까?")){
-totalCount=0;
-collection=[];
-glow=0;
+totalCount=0;collection=[];glow=0;
 localStorage.clear();
 document.getElementById("result").innerHTML="";
 updateUI();
